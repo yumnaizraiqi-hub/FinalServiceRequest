@@ -1,7 +1,7 @@
 const ALLOWED: Record<string, string[]> = {
   submitted:   ['in_progress', 'rejected'],
   in_progress: ['resolved', 'rejected'],
-  resolved:    ['closed', 'rejected'],
+  resolved:    ['closed'],
   closed:      [],                     
   rejected:    [],                     
 };

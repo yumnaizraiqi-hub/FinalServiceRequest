@@ -142,33 +142,15 @@ export const serviceRequestsRouter = createTRPCRouter({
       status: statusSchema,
     }))
     .mutation(async ({ ctx, input }) => {
-      console.log("updateStatus called with:", { 
-        id: input.id, 
-        idType: typeof input.id,
-        idLength: input.id.length,
-        idValue: JSON.stringify(input.id),
-        status: input.status 
-      });
-      
-      // Validate UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(input.id)) {
-        console.error("Invalid UUID format:", input.id);
-        throw new TRPCError({ code: "BAD_REQUEST", message: `Invalid UUID format: ${input.id}` });
-      }
-      
       const request = await ctx.db.query.serviceRequests.findFirst({
         where: eq(serviceRequests.id, input.id),
       });
 
       if (!request) {
-        console.error("Request not found:", input.id);
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      console.log("Current status:", request.status, "New status:", input.status);
       if (!canTransition(request.status, input.status)) {
-        console.error("Transition failed");
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `Cannot transition from "${request.status}" to "${input.status}"`,
@@ -183,11 +165,9 @@ export const serviceRequestsRouter = createTRPCRouter({
           .returning();
 
         if (!updated) {
-          console.error("Update returned null");
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         }
 
-        console.log("Inserting event with actorId:", ctx.session.user.id);
         await ctx.db.insert(serviceRequestEvents).values({
           requestId: input.id,
           actorId: ctx.session.user.id,
@@ -195,10 +175,8 @@ export const serviceRequestsRouter = createTRPCRouter({
           toStatus: input.status,
         });
 
-        console.log("updateStatus succeeded");
         return updated;
       } catch (err) {
-        console.error("Database error during updateStatus:", err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", cause: err });
       }
     }),

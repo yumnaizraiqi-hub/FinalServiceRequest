@@ -40,7 +40,9 @@ export default function AdminClient() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const { data, isLoading } = api.serviceRequests.listAll.useQuery({});
+  const { data, isLoading } = api.serviceRequests.listAll.useQuery(
+    filterStatus === "all" ? {} : { status: filterStatus as Status }
+  );
 
   const updateStatus = api.serviceRequests.updateStatus.useMutation({
     onMutate: ({ id }) => {
@@ -62,10 +64,7 @@ export default function AdminClient() {
     updateStatus.mutate({ id, status });
   };
 
-  const filteredData = data?.filter((req: ServiceRequest) => {
-    if (filterStatus === "all") return true;
-    return req.status === filterStatus;
-  });
+  const filteredData = data;
 
   return (
     <div className="space-y-6">
